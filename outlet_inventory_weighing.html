@@ -1,0 +1,389 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .screen { max-width: 420px; margin: 0 auto; padding: 0 0 2rem; }
+  .topbar { background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 14px 16px; display: flex; align-items: center; gap: 10px; }
+  .topbar-logo { width: 32px; height: 32px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .topbar-logo i { color: #fff; font-size: 18px; }
+  .topbar-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .topbar-sub { font-size: 12px; color: var(--color-text-secondary); }
+  .outlet-badge { margin-left: auto; background: #E1F5EE; color: #0F6E56; font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 500; }
+  .section { padding: 16px 16px 0; }
+  .label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 6px; letter-spacing: 0.03em; text-transform: uppercase; }
+  select, input[type="text"], input[type="number"] { width: 100%; }
+  .scan-box { margin: 16px 16px 0; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; background: var(--color-background-primary); }
+  .scan-header { padding: 12px 14px; border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 8px; }
+  .scan-header i { font-size: 18px; color: #1D9E75; }
+  .scan-header span { font-size: 14px; font-weight: 500; color: var(--color-text-primary); }
+  .scan-header .scan-badge { margin-left: auto; font-size: 11px; padding: 3px 8px; border-radius: 20px; background: #E1F5EE; color: #0F6E56; }
+  .camera-area { position: relative; width: 100%; height: 220px; background: #0c0c0c; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; cursor: pointer; }
+  .camera-area video { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; }
+  .camera-area canvas.preview { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; display: none; }
+  .scan-frame { position: absolute; width: 200px; height: 80px; border: 2px solid #1D9E75; border-radius: 8px; box-shadow: 0 0 0 2000px rgba(0,0,0,0.35); }
+  .scan-frame::before, .scan-frame::after { content: ''; position: absolute; width: 16px; height: 16px; border-color: #5DCAA5; border-style: solid; }
+  .scan-frame::before { top: -2px; left: -2px; border-width: 3px 0 0 3px; border-radius: 4px 0 0 0; }
+  .scan-frame::after { bottom: -2px; right: -2px; border-width: 0 3px 3px 0; border-radius: 0 0 4px 0; }
+  .cam-placeholder { color: #666; text-align: center; z-index: 1; }
+  .cam-placeholder i { font-size: 36px; display: block; margin-bottom: 6px; }
+  .cam-placeholder span { font-size: 13px; }
+  .cam-btn-row { padding: 12px 14px; display: flex; gap: 8px; }
+  .btn-primary { background: #1D9E75; color: #fff; border: none; border-radius: var(--border-radius-md); padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; flex: 1; justify-content: center; }
+  .btn-primary:active { opacity: 0.85; }
+  .btn-primary i { font-size: 16px; }
+  .btn-secondary { background: var(--color-background-secondary); color: var(--color-text-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 10px 16px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; }
+  .btn-secondary:active { opacity: 0.75; }
+  .ocr-result { margin: 0 16px; border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); background: var(--color-background-primary); overflow: hidden; }
+  .ocr-result-header { padding: 10px 14px; background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); display: flex; align-items: center; gap: 6px; }
+  .ocr-result-header i { font-size: 15px; color: var(--color-text-secondary); }
+  .ocr-result-header span { font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+  .weight-display { padding: 14px; display: flex; align-items: center; gap: 12px; }
+  .weight-number { font-size: 36px; font-weight: 500; color: var(--color-text-primary); flex: 1; border: none; background: transparent; outline: none; width: 100%; }
+  .weight-unit { font-size: 18px; color: var(--color-text-secondary); }
+  .weight-confidence { font-size: 11px; color: #1D9E75; padding: 0 14px 10px; }
+  .entries-box { margin: 16px 16px 0; }
+  .entries-title { font-size: 12px; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; }
+  .entry-row { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .entry-num { font-size: 11px; color: var(--color-text-secondary); width: 18px; }
+  .entry-weight { font-size: 15px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .entry-unit { font-size: 13px; color: var(--color-text-secondary); }
+  .entry-del { background: none; border: none; cursor: pointer; color: #E24B4A; font-size: 16px; padding: 2px; }
+  .total-row { background: #E1F5EE; border-radius: var(--border-radius-md); padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .total-label { font-size: 13px; color: #0F6E56; font-weight: 500; }
+  .total-val { font-size: 18px; font-weight: 500; color: #085041; }
+  .add-weight-btn { width: 100%; background: var(--color-background-secondary); border: 0.5px dashed var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 10px; font-size: 14px; color: var(--color-text-secondary); cursor: pointer; display: flex; align-items: center; gap: 6px; justify-content: center; margin-top: 4px; }
+  .add-weight-btn i { font-size: 16px; }
+  .done-btn { margin: 16px 16px 0; width: calc(100% - 32px); background: #1D9E75; color: #fff; border: none; border-radius: var(--border-radius-md); padding: 14px; font-size: 15px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 8px; justify-content: center; }
+  .done-btn i { font-size: 18px; }
+  .status-bar { margin: 0 16px; padding: 10px 12px; border-radius: var(--border-radius-md); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .status-bar.processing { background: #FAEEDA; color: #854F0B; }
+  .status-bar.success { background: #E1F5EE; color: #0F6E56; }
+  .status-bar.error { background: #FCEBEB; color: #A32D2D; }
+  .status-bar i { font-size: 16px; }
+  .hidden { display: none !important; }
+  .spin { animation: spin 1s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .success-screen { margin: 16px; border-radius: var(--border-radius-lg); background: #E1F5EE; padding: 32px 16px; text-align: center; display: none; }
+  .success-screen i { font-size: 48px; color: #1D9E75; display: block; margin-bottom: 12px; }
+  .success-screen h3 { font-size: 18px; font-weight: 500; color: #085041; margin-bottom: 6px; }
+  .success-screen p { font-size: 14px; color: #0F6E56; margin-bottom: 16px; }
+</style>
+
+<div class="screen">
+  <div class="topbar">
+    <div class="topbar-logo"><i class="ti ti-stack-2" aria-hidden="true"></i></div>
+    <div>
+      <div class="topbar-title">Stock Weighing</div>
+      <div class="topbar-sub">Raw material intake</div>
+    </div>
+    <div class="outlet-badge">Outlet #04</div>
+  </div>
+
+  <div class="section" style="margin-top:16px;">
+    <div class="label">Select item</div>
+    <select id="itemSelect">
+      <option value="">— choose item —</option>
+      <optgroup label="Grains">
+        <option value="R01">R01 — Rice</option>
+        <option value="R02">R02 — Rice Rava</option>
+        <option value="W01">W01 — Wheat</option>
+        <option value="S01">S01 — Sooji / Rava</option>
+      </optgroup>
+      <optgroup label="Pulses">
+        <option value="T01">T01 — Toor Dal</option>
+        <option value="C01">C01 — Chana Dal</option>
+        <option value="U01">U01 — Urad Dal</option>
+      </optgroup>
+      <optgroup label="Oils & Spices">
+        <option value="O01">O01 — Groundnut Oil</option>
+        <option value="M01">M01 — Mustard Seeds</option>
+        <option value="CH01">CH01 — Chilli (Dry)</option>
+      </optgroup>
+    </select>
+  </div>
+
+  <div class="scan-box" style="margin-top:16px;">
+    <div class="scan-header">
+      <i class="ti ti-camera" aria-hidden="true"></i>
+      <span>Scan weighing machine</span>
+      <div class="scan-badge">Tesseract OCR</div>
+    </div>
+    <div class="camera-area" id="cameraArea">
+      <video id="video" autoplay playsinline></video>
+      <canvas class="preview" id="previewCanvas"></canvas>
+      <div class="scan-frame" id="scanFrame" style="display:none;"></div>
+      <div class="cam-placeholder" id="camPlaceholder">
+        <i class="ti ti-camera-off" aria-hidden="true"></i>
+        <span>Tap to open camera</span>
+      </div>
+    </div>
+    <div class="cam-btn-row">
+      <button class="btn-primary" id="openCamBtn" onclick="openCamera()">
+        <i class="ti ti-camera" aria-hidden="true"></i> Open camera
+      </button>
+      <button class="btn-primary hidden" id="captureBtn" onclick="captureAndOCR()">
+        <i class="ti ti-scan" aria-hidden="true"></i> Scan weight
+      </button>
+      <button class="btn-secondary hidden" id="retakeBtn" onclick="retake()">
+        <i class="ti ti-refresh" aria-hidden="true"></i> Retake
+      </button>
+    </div>
+  </div>
+
+  <div id="statusBar" class="status-bar hidden" style="margin-top:10px;"></div>
+
+  <div class="ocr-result hidden" id="ocrResult" style="margin-top:10px;">
+    <div class="ocr-result-header">
+      <i class="ti ti-weight" aria-hidden="true"></i>
+      <span>Recognised weight</span>
+    </div>
+    <div class="weight-display">
+      <input class="weight-number" id="weightInput" type="number" step="0.01" placeholder="0.00" />
+      <span class="weight-unit">kg</span>
+    </div>
+    <div class="weight-confidence" id="confidenceText"></div>
+  </div>
+
+  <div class="entries-box hidden" id="entriesBox">
+    <div class="entries-title">Weight entries</div>
+    <div id="entriesList"></div>
+    <div class="total-row" id="totalRow">
+      <span class="total-label">Total weight</span>
+      <span class="total-val" id="totalVal">0 kg</span>
+    </div>
+    <button class="add-weight-btn" onclick="addAnotherEntry()">
+      <i class="ti ti-plus" aria-hidden="true"></i> Add another weighing
+    </button>
+  </div>
+
+  <button class="done-btn hidden" id="doneBtn" onclick="saveEntry()">
+    <i class="ti ti-circle-check" aria-hidden="true"></i> Save to database
+  </button>
+
+  <div class="success-screen" id="successScreen">
+    <i class="ti ti-circle-check" aria-hidden="true"></i>
+    <h3>Entry saved</h3>
+    <p id="successMsg"></p>
+    <button class="btn-primary" onclick="resetAll()" style="width:100%;">
+      <i class="ti ti-plus" aria-hidden="true"></i> New entry
+    </button>
+  </div>
+</div>
+
+<canvas id="ocrCanvas" style="display:none;"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script>
+let stream = null;
+let entries = [];
+let tesseractReady = false;
+let worker = null;
+
+async function initTesseract() {
+  try {
+    worker = await Tesseract.createWorker('eng', 1, {
+      logger: () => {}
+    });
+    await worker.setParameters({
+      tessedit_char_whitelist: '0123456789.',
+      tessedit_pageseg_mode: '7'
+    });
+    tesseractReady = true;
+  } catch(e) {
+    console.error('Tesseract init failed', e);
+  }
+}
+initTesseract();
+
+async function openCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+    });
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+    document.getElementById('camPlaceholder').classList.add('hidden');
+    document.getElementById('scanFrame').style.display = 'block';
+    document.getElementById('openCamBtn').classList.add('hidden');
+    document.getElementById('captureBtn').classList.remove('hidden');
+    document.getElementById('previewCanvas').style.display = 'none';
+    showStatus('processing', 'Camera active — frame the display and tap Scan weight');
+  } catch(e) {
+    showStatus('error', 'Camera access denied. Please allow camera permission.');
+  }
+}
+
+async function captureAndOCR() {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('ocrCanvas');
+  const preview = document.getElementById('previewCanvas');
+
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  preview.width = canvas.width;
+  preview.height = canvas.height;
+
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+
+  const prevCtx = preview.getContext('2d');
+  prevCtx.drawImage(video, 0, 0);
+
+  if (stream) {
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+  preview.style.display = 'block';
+  document.getElementById('video').style.display = 'none';
+  document.getElementById('scanFrame').style.display = 'none';
+  document.getElementById('captureBtn').classList.add('hidden');
+  document.getElementById('retakeBtn').classList.remove('hidden');
+
+  preprocessImage(ctx, canvas.width, canvas.height);
+
+  showStatus('processing', '<span class="spin">⟳</span> Reading digits with OCR…');
+
+  if (!tesseractReady || !worker) {
+    showStatus('error', 'OCR not ready yet, please wait a moment and retry.');
+    return;
+  }
+
+  try {
+    const imageData = canvas.toDataURL('image/png');
+    const result = await worker.recognize(imageData);
+    const rawText = result.data.text;
+    const confidence = result.data.confidence;
+
+    const cleaned = rawText.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1').trim();
+    const parsed = parseFloat(cleaned);
+
+    if (!isNaN(parsed) && parsed > 0 && parsed < 10000) {
+      document.getElementById('weightInput').value = parsed.toFixed(2);
+      document.getElementById('ocrResult').classList.remove('hidden');
+      document.getElementById('confidenceText').textContent = `OCR confidence: ${Math.round(confidence)}% — edit if needed`;
+      showStatus('success', 'Weight detected — confirm or edit below');
+      document.getElementById('doneBtn').classList.remove('hidden');
+    } else {
+      document.getElementById('weightInput').value = '';
+      document.getElementById('ocrResult').classList.remove('hidden');
+      document.getElementById('confidenceText').textContent = 'Could not read clearly — enter manually';
+      showStatus('error', 'Could not read digits clearly. Enter the weight manually.');
+      document.getElementById('doneBtn').classList.remove('hidden');
+    }
+  } catch(e) {
+    showStatus('error', 'OCR failed. Enter weight manually.');
+    document.getElementById('ocrResult').classList.remove('hidden');
+    document.getElementById('doneBtn').classList.remove('hidden');
+  }
+}
+
+function preprocessImage(ctx, w, h) {
+  const imageData = ctx.getImageData(0, 0, w, h);
+  const d = imageData.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const gray = 0.299 * d[i] + 0.587 * d[i+1] + 0.114 * d[i+2];
+    const val = gray > 128 ? 255 : 0;
+    d[i] = d[i+1] = d[i+2] = val;
+  }
+  ctx.putImageData(imageData, 0, 0);
+}
+
+function retake() {
+  document.getElementById('previewCanvas').style.display = 'none';
+  document.getElementById('video').style.display = 'block';
+  document.getElementById('ocrResult').classList.add('hidden');
+  document.getElementById('retakeBtn').classList.add('hidden');
+  document.getElementById('doneBtn').classList.add('hidden');
+  document.getElementById('statusBar').classList.add('hidden');
+  openCamera();
+}
+
+function addAnotherEntry() {
+  const val = parseFloat(document.getElementById('weightInput').value);
+  if (!isNaN(val) && val > 0) pushEntry(val);
+  document.getElementById('ocrResult').classList.add('hidden');
+  document.getElementById('doneBtn').classList.add('hidden');
+  document.getElementById('statusBar').classList.add('hidden');
+  document.getElementById('previewCanvas').style.display = 'none';
+  document.getElementById('video').style.display = 'block';
+  document.getElementById('retakeBtn').classList.add('hidden');
+  document.getElementById('captureBtn').classList.add('hidden');
+  document.getElementById('openCamBtn').classList.remove('hidden');
+  document.getElementById('camPlaceholder').classList.remove('hidden');
+  document.getElementById('camPlaceholder').querySelector('i').className = 'ti ti-camera-off';
+  document.getElementById('camPlaceholder').querySelector('span').textContent = 'Tap to open camera';
+}
+
+function pushEntry(val) {
+  entries.push(val);
+  renderEntries();
+}
+
+function renderEntries() {
+  const list = document.getElementById('entriesList');
+  list.innerHTML = '';
+  entries.forEach((e, i) => {
+    const row = document.createElement('div');
+    row.className = 'entry-row';
+    row.innerHTML = `<span class="entry-num">${i+1}</span><span class="entry-weight">${e.toFixed(2)}</span><span class="entry-unit">kg</span><button class="entry-del" onclick="removeEntry(${i})"><i class="ti ti-trash" aria-hidden="true"></i></button>`;
+    list.appendChild(row);
+  });
+  const total = entries.reduce((a,b) => a+b, 0);
+  document.getElementById('totalVal').textContent = total.toFixed(2) + ' kg';
+  document.getElementById('entriesBox').classList.remove('hidden');
+}
+
+function removeEntry(i) {
+  entries.splice(i, 1);
+  if (entries.length === 0) {
+    document.getElementById('entriesBox').classList.add('hidden');
+  } else {
+    renderEntries();
+  }
+}
+
+function saveEntry() {
+  const item = document.getElementById('itemSelect');
+  const itemLabel = item.options[item.selectedIndex]?.text || 'Unknown item';
+  const val = parseFloat(document.getElementById('weightInput').value);
+
+  if (!item.value) { showStatus('error', 'Please select an item first.'); return; }
+  if (isNaN(val) || val <= 0) { showStatus('error', 'Please enter a valid weight.'); return; }
+
+  if (val && !entries.includes(val)) pushEntry(val);
+
+  const total = entries.reduce((a,b) => a+b, 0) || val;
+  const count = entries.length || 1;
+
+  document.getElementById('successMsg').textContent = `${itemLabel} — ${total.toFixed(2)} kg total (${count} weighing${count > 1 ? 's' : ''}) saved at ${new Date().toLocaleTimeString()}`;
+  document.querySelector('.screen').querySelectorAll('.scan-box, .ocr-result, .entries-box, .done-btn, #statusBar, .section').forEach(el => el.style.display = 'none');
+  document.getElementById('successScreen').style.display = 'block';
+}
+
+function resetAll() {
+  entries = [];
+  document.getElementById('itemSelect').value = '';
+  document.getElementById('weightInput').value = '';
+  document.getElementById('ocrResult').classList.add('hidden');
+  document.getElementById('entriesBox').classList.add('hidden');
+  document.getElementById('doneBtn').classList.add('hidden');
+  document.getElementById('statusBar').classList.add('hidden');
+  document.getElementById('successScreen').style.display = 'none';
+  document.getElementById('previewCanvas').style.display = 'none';
+  document.getElementById('video').style.display = 'block';
+  document.getElementById('camPlaceholder').classList.remove('hidden');
+  document.getElementById('openCamBtn').classList.remove('hidden');
+  document.getElementById('captureBtn').classList.add('hidden');
+  document.getElementById('retakeBtn').classList.add('hidden');
+  document.querySelector('.screen').querySelectorAll('.scan-box, .section').forEach(el => el.style.display = '');
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+}
+
+function showStatus(type, msg) {
+  const bar = document.getElementById('statusBar');
+  bar.className = `status-bar ${type}`;
+  const icons = { processing: 'ti-loader', success: 'ti-circle-check', error: 'ti-alert-circle' };
+  bar.innerHTML = `<i class="ti ${icons[type]}" aria-hidden="true"></i> ${msg}`;
+  bar.classList.remove('hidden');
+}
+</script>
